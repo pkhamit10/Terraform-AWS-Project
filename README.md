@@ -6,7 +6,7 @@ This repository contains Terraform configurations to **provision and manage AWS 
 
 ## 📁 Project Overview
 
-Terraform is an open-source tool that lets you define cloud and on-premises resources in human-readable configuration files that you can version, reuse, and share. With these configurations, you can create and manage AWS infrastructure such as:
+Terraform is an open-source tool to define cloud and on-premises resources in human-readable configuration files that can version, reuse, and share. With these configurations, create and manage AWS infrastructure such as:
 
 - Virtual Private Clouds (VPCs)
 - Subnets, Route Tables, and Internet Gateways
