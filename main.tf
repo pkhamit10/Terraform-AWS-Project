@@ -1,3 +1,4 @@
+#create a VPC
 resource "aws_vpc" "my_vpc" {
   cidr_block = var.vpc_cidr
 
@@ -6,6 +7,7 @@ resource "aws_vpc" "my_vpc" {
   }
 }
 
+#setup subnets using for_each to iterate over the map variable
 resource "aws_subnet" "subnets" {
   for_each                = var.subnets
   vpc_id                  = aws_vpc.my_vpc.id
@@ -18,6 +20,7 @@ resource "aws_subnet" "subnets" {
   }
 }
 
+#Attach an Internet Gateway (IGW) to the VPC
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.my_vpc.id
 
@@ -25,4 +28,16 @@ resource "aws_internet_gateway" "igw" {
     Name = "${var.vpc_name}-igw"
   }
   
+}
+
+#Create a route table for the VPC and add a route to the IGW
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.my_vpc.id   
+    route {
+          cidr_block = "0.0.0.0/0"
+          gateway_id = aws_internet_gateway.igw.id
+    }    
+    tags = {
+        Name = "${var.vpc_name}-public-rt"
+    }
 }
