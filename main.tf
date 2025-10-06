@@ -96,7 +96,7 @@ resource "aws_security_group" "web_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]  # 👈 Allows all outbound traffic
+    cidr_blocks = ["0.0.0.0/0"]  #  Allows all outbound traffic
   }
 
   tags = {
@@ -129,3 +129,41 @@ resource "aws_instance" "web" {
 output "instance_public_ip" {
   value = aws_instance.web.public_ip
 }
+
+resource "aws_security_group" "db_sg" {
+  name        = "db-sg"
+  description = "Security group for database server"
+  vpc_id      = aws_vpc.my_vpc.id   
+
+  # Allow inbound traffic from your app/web servers (example: port 3306 for MySQL)
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    security_groups = [aws_security_group.web_sg.id]  # Only allow your web/app SG
+  }
+
+
+  # Allow all outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "db-sg"
+  }
+}
+resource "aws_instance" "db" {
+  ami                         = "ami-052064a798f08f0d3"   # Amazon Linux 2 AMI
+  instance_type              = "t3.micro"
+  subnet_id                  = aws_subnet.subnets["subnet-b"].id
+  key_name                   = "pkawsprod"             
+  vpc_security_group_ids     = [aws_security_group.db_sg.id]  
+
+  tags = {
+    Name = "db01"
+  }
+}   
