@@ -41,3 +41,9 @@ resource "aws_route_table" "public_rt" {
         Name = "${var.vpc_name}-public-rt"
     }
 }
+
+#Associate the public route table with the public subnets
+resource "aws_route_table_association" "public_rt_assoc" {
+  subnet_id      = aws_subnet.subnets["subnet1"].id
+  route_table_id = aws_route_table.public_rt.id
+}
