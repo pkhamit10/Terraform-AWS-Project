@@ -50,7 +50,7 @@ variable "instances" {
                       yum install httpd -y
                       systemctl start httpd
                       systemctl enable httpd
-                      echo '<html><h1>Hello Cloud Gurus!</h1></html>' > /var/www/html/index.html
+                      echo '<html><h1>Hello AWS EC2 Instance!</h1></html>' > /var/www/html/index.html
                       EOF
       sg_key        = "web_sg"
     }

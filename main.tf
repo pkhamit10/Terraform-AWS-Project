@@ -156,3 +156,32 @@ output "web_instance_public_ip" {
 output "db_instance_private_ip" {
   value = aws_instance.servers["db_server"].private_ip
 }
+# -------------------------
+# Create NAT Gateway in public subnet
+# -------------------------
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.subnets["subnet-a"].id
+  tags = {
+    Name = "nat-gateway"
+  }
+
+  depends_on = [aws_internet_gateway.igw]  # Make sure IGW exists first
+}
+# -------------------------
+# Allocate Elastic IP for NAT Gateway
+# -------------------------
+resource "aws_eip" "nat_eip" {
+  tags = {
+    Name = "nat-eip"
+  }
+}
+
+
+# Add a route to the main route table via NAT Gateway
+resource "aws_route" "nat_route" {
+  route_table_id         = aws_vpc.my_vpc.main_route_table_id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat.id
+}
+
