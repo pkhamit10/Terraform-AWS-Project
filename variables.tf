@@ -10,28 +10,10 @@ variable "vpc_name" {
   default     = "pk-vpc"
 }
 
-# variable "subnet_name" {
-#   description = "The name of the subnet"
-#   type        = string
-#   default     = "10.0.1.0/24 - us-east-1a"
-# }
-
-# variable "subnet_cidr" {
-#   description = "The CIDR block for the subnet"
-#   type        = string
-#   default     = "10.0.1.0/24"
-# }
-
-# variable "subnet_az" {
-#   description = "The availability zone for the subnet"
-#   type        = string
-#   default     = "us-east-1a"
-# }
-
 variable "subnets" {
   type = map(object({
-    cidr_block        = string
-    availability_zone = string
+    cidr_block              = string
+    availability_zone       = string
     map_public_ip_on_launch = bool
   }))
   default = {
@@ -47,20 +29,39 @@ variable "subnets" {
     }
   }
 }
+variable "instances" {
+  type = map(object({
+    ami           = string
+    instance_type = string
+    subnet_key    = string
+    key_name      = string
+    user_data     = string
+    sg_key        = string
+  }))
+  default = {
+    web_server = {
+      ami           = "ami-052064a798f08f0d3"
+      instance_type = "t3.micro"
+      subnet_key    = "subnet-a"
+      key_name      = "pkawsprod"
+      user_data     = <<-EOF
+                      #!/bin/bash
+                      yum update -y
+                      yum install httpd -y
+                      systemctl start httpd
+                      systemctl enable httpd
+                      echo '<html><h1>Hello AWS EC2 Instance!</h1></html>' > /var/www/html/index.html
+                      EOF
+      sg_key        = "web_sg"
+    }
 
-# variable "instances" {
-#   type = map(object({
-#     ami           = string
-#     instance_type = string
-#   }))
-#   default = {
-#     web01 = {
-#       ami           = "ami-052064a798f08f0d3" # Amazon Linux 2 AMI
-#       instance_type = "t3.micro"
-#     }
-#     dbserver = {
-#       ami           = "ami-0360c520857e3138f" # Amazon Linux 2 AMI
-#       instance_type = "t3.micro"
-#     }
-#   } 
-#}
+    db_server = {
+      ami           = "ami-052064a798f08f0d3"
+      instance_type = "t3.micro"
+      subnet_key    = "subnet-b"
+      key_name      = "pkawsprod"
+      user_data     = ""
+      sg_key        = "db_sg"
+    }
+  }
+}
