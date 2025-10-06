@@ -48,3 +48,19 @@ variable "subnets" {
   }
 }
 
+# variable "instances" {
+#   type = map(object({
+#     ami           = string
+#     instance_type = string
+#   }))
+#   default = {
+#     web01 = {
+#       ami           = "ami-052064a798f08f0d3" # Amazon Linux 2 AMI
+#       instance_type = "t3.micro"
+#     }
+#     dbserver = {
+#       ami           = "ami-0360c520857e3138f" # Amazon Linux 2 AMI
+#       instance_type = "t3.micro"
+#     }
+#   } 
+#}

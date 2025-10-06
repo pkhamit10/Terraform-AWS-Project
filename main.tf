@@ -44,6 +44,88 @@ resource "aws_route_table" "public_rt" {
 
 #Associate the public route table with the public subnets
 resource "aws_route_table_association" "public_rt_assoc" {
-  subnet_id      = aws_subnet.subnets["subnet1"].id
+  subnet_id      = aws_subnet.subnets["subnet-a"].id
   route_table_id = aws_route_table.public_rt.id
+}
+
+# resource "aws_instance" "servers" {
+#     for_each      = var.instances
+#     ami           = each.value.ami
+#     instance_type = each.value.instance_type
+#     subnet_id     = aws_subnet.subnets["subnet-a"].id
+#     key_name      = "pkawsprod"
+
+#     tags = {
+#         Name = each.key
+#     }
+# }
+
+# output "instance_names" {
+#   value = [for instance in aws_instance.servers : instance.tags.Name]
+# }
+
+data "aws_vpc" "existing" {
+  filter {
+    name   = "tag:Name"
+    values = [var.vpc_name]   
+  }
+}
+
+resource "aws_security_group" "web_sg" {
+  name        = "web-sg"
+  description = "Allow SSH and HTTP"
+  vpc_id      = data.aws_vpc.existing.id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  #  Allows SSH from anywhere (use with caution)
+  }
+
+  ingress {
+    description = "HTTP from VPC"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  #  Allows HTTP from anywhere
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]  # 👈 Allows all outbound traffic
+  }
+
+  tags = {
+    Name = "WebDMZ"
+  }
+}
+
+resource "aws_instance" "web" {
+  ami                         = "ami-052064a798f08f0d3"   
+  instance_type              = "t3.micro"
+  subnet_id                  = aws_subnet.subnets["subnet-a"].id
+  key_name                   = "pkawsprod"             
+  vpc_security_group_ids     = [aws_security_group.web_sg.id]  
+
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install httpd -y
+              systemctl start httpd
+              systemctl enable httpd
+              cd /var/www/html
+              echo '<html><h1>Hello AWS EC2 Instance!</h1></html>' > index.html
+              EOF
+
+  tags = {
+    Name = "web01"
+  }
+}
+
+output "instance_public_ip" {
+  value = aws_instance.web.public_ip
 }
