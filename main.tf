@@ -48,18 +48,6 @@ resource "aws_route_table_association" "public_rt_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-# resource "aws_instance" "servers" {
-#     for_each      = var.instances
-#     ami           = each.value.ami
-#     instance_type = each.value.instance_type
-#     subnet_id     = aws_subnet.subnets["subnet-a"].id
-#     key_name      = "pkawsprod"
-
-#     tags = {
-#         Name = each.key
-#     }
-# }
-
 # -------------------------
 # Security Group for Web Server
 # -------------------------
