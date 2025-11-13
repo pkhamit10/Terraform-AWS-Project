@@ -1,4 +1,4 @@
-#create a VPC
+#create a VPC for the infrastructure
 resource "aws_vpc" "my_vpc" {
   cidr_block = var.vpc_cidr
 
