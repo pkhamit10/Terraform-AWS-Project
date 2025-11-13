@@ -54,6 +54,11 @@ module "neworking" {
   subnets  = var.subnets
 }
 
+module "security_groups" {
+  source = "./modules/security_groups"
+  vpc_id = module.neworking.vpc_id
+}
+
 # -------------------------
 # Security Group for Web Server
 # -------------------------
