@@ -3,7 +3,7 @@
 # -------------------------
 
 resource "aws_security_group" "web_sg" {
- name        = "web-sg"
+  name        = "web-sg"
   description = "Allow SSH and HTTP"
   vpc_id      = var.vpc_id
 
@@ -27,38 +27,38 @@ resource "aws_security_group" "web_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-     cidr_blocks = ["0.0.0.0/0"] #  Allows all outbound traffic
-   }
+    cidr_blocks = ["0.0.0.0/0"] #  Allows all outbound traffic
+  }
 
-   tags = {
-     Name = "WebDMZ"
-   }
-} 
+  tags = {
+    Name = "WebDMZ"
+  }
+}
 # # -------------------------
 # # Security Group for DB Server
 # # -------------------------
- resource "aws_security_group" "db_sg" {
-   name        = "db-sg"
-   vpc_id      = var.vpc_id
-   description = "Security group for database server"
+resource "aws_security_group" "db_sg" {
+  name        = "db-sg"
+  vpc_id      = var.vpc_id
+  description = "Security group for database server"
 
-   # Allow inbound traffic from your app/web servers (example: port 3306 for MySQL)
-   ingress {
-     from_port       = 22
-     to_port         = 22
-     protocol        = "tcp"
-     security_groups = [aws_security_group.web_sg.id] # Only allow your web/app SG
-   }
+  # Allow inbound traffic from your app/web servers (example: port 3306 for MySQL)
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web_sg.id] # Only allow your web/app SG
+  }
 
-   # Allow all outbound traffic
-   egress {
-     from_port   = 0
-     to_port     = 0
-     protocol    = "-1"
-     cidr_blocks = ["0.0.0.0/0"]
-   }
+  # Allow all outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-   tags = {
-     Name = "db-sg"
-   }
- }
+  tags = {
+    Name = "db-sg"
+  }
+}

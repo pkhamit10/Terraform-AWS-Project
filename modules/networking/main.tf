@@ -21,17 +21,17 @@ resource "aws_subnet" "subnets" {
 
 #Attach an Internet Gateway (IGW) to the VPC
 resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.this.id       
-    tags = {
-        Name = "${var.vpc_name}-igw"
-    }
+  vpc_id = aws_vpc.this.id
+  tags = {
+    Name = "${var.vpc_name}-igw"
+  }
 }
 
 #Create a route table for the VPC and add a route to the IGW       
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.this.id
   route {
-    cidr_block =  "0.0.0.0/0"
+    cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
   tags = {
@@ -43,7 +43,7 @@ resource "aws_route_table" "public_rt" {
 resource "aws_route_table_association" "public_rt_assoc" {
   subnet_id      = aws_subnet.subnets["subnet-a"].id
   route_table_id = aws_route_table.public_rt.id
-}   
+}
 
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat_eip.id
@@ -52,7 +52,7 @@ resource "aws_nat_gateway" "nat" {
     Name = "nat-gateway"
   }
 
-  depends_on = [aws_internet_gateway.igw] 
+  depends_on = [aws_internet_gateway.igw]
 }
 
 # -------------------------
