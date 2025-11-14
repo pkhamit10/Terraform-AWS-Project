@@ -47,8 +47,8 @@
 #   subnet_id      = aws_subnet.subnets["subnet-a"].id
 #   route_table_id = aws_route_table.public_rt.id
 # }
-module "neworking" {
-  source = "./modules/networking" 
+module "networking" {
+  source   = "./modules/networking"
   vpc_cidr = var.vpc_cidr
   vpc_name = var.vpc_name
   subnets  = var.subnets
@@ -56,8 +56,24 @@ module "neworking" {
 
 module "security_groups" {
   source = "./modules/security_groups"
-  vpc_id = module.neworking.vpc_id
+  vpc_id = module.networking.vpc_id
 }
+
+module "ec2" {
+  source = "./modules/ec2"
+
+  instances = var.instances
+
+  # Pass subnet IDs from networking module
+  subnet_ids = module.networking.subnet_ids
+
+  # Pass BOTH SGs
+  security_group_ids = {
+    web_sg = module.security_groups.web_sg_id
+    db_sg  = module.security_groups.db_sg_id
+  }
+}
+
 
 # -------------------------
 # Security Group for Web Server
