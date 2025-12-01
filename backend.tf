@@ -3,7 +3,7 @@ terraform {
     organization = "pkham"
 
     workspaces {
-      name = "DEV"
+      name = "env-"
     }   
   }
 }
