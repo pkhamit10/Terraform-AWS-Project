@@ -1,48 +1,56 @@
-name: Terraform CI/CD
+name: Terraform Staging Deploy
+
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+
+env:
+  TF_WORKSPACE: "staging"   # Terraform Cloud workspace
+  TF_VAR_FILE: "dev.tfvars" # Environment-specific variables file
+
 jobs:
-    terraform:
-        name: "Terraform"
-        runs-on: ubuntu-latest
+  terraform:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Install Terraform CLI
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.12.2"  
+
+      # 3. Terraform Login to Terraform Cloud
+      - name: Terraform Cloud Login
+        run: terraform login
         env:
-          TF_VERSION: 1.5.6
-          TF_WORKING_DIR: ./terraform
-          AWS_REGION: us-east-1
+          # Store Terraform Cloud token in GitHub Secrets as TFC_TOKEN
+          # You can generate it from Terraform Cloud > User Settings > Tokens
+          TERRAFORM_LOGIN_TOKEN: ${{ secrets.TFC_TOKEN }}
 
-        steps:
-            - name: Checkout repository code
-              uses: actions/checkout@v3
-        
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v2    
-              with:
-                terraform_version: ${{ env.TF_VERSION }}
+      # 4. Terraform Init
+      - name: Terraform Init
+        run: terraform init
 
-            - name: Aws Credentials
-              uses: aws-actions/configure-aws-credentials@v2
-              with:
-                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                aws-region: ${{ env.AWS_REGION }}
+      # 5. Select Terraform Cloud Workspace
+      - name: Select Workspace
+        run: terraform workspace select $TF_WORKSPACE || terraform workspace new $TF_WORKSPACE
 
-            - name: Terraform Init
-              run: terraform init
+      # 6. Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan -var-file=$TF_VAR_FILE
 
-            - name: Terraform Format
-              run: terraform fmt -check
-
-            - name: Terraform Validate
-              run: terraform validate
-
-            - name: Terraform Plan
-              run: terraform plan 
- 
-            - name: Terraform destroy
-              if: github.ref == 'refs/heads/main'
-              run: terraform destroy -auto-approve 
+      # 7. Terraform Apply (auto-approve)
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'  # only apply on main branch
+        run: terraform apply -var-file=$TF_VAR_FILE -auto-approve
