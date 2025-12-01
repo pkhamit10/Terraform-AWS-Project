@@ -30,27 +30,20 @@ jobs:
         with:
           terraform_version: "1.12.2"  
 
-      # 3. Terraform Login to Terraform Cloud
-      - name: Terraform Cloud Login
-        run: terraform login
-        env:
-          # Store Terraform Cloud token in GitHub Secrets as TFC_TOKEN
-          # You can generate it from Terraform Cloud > User Settings > Tokens
-          TERRAFORM_LOGIN_TOKEN: ${{ secrets.TFC_TOKEN }}
+      - name: Setup Terraform Cloud credentials
+        run: |
+          mkdir -p ~/.terraform.d
+          echo '{"credentials":{"app.terraform.io":{"token":"'"${{ secrets.TFC_TOKEN }}"'"}}}' > ~/.terraform.d/credentials.tfrc.json
 
-      # 4. Terraform Init
       - name: Terraform Init
         run: terraform init
 
-      # 5. Select Terraform Cloud Workspace
       - name: Select Workspace
-        run: terraform workspace select $TF_WORKSPACE || terraform workspace new $TF_WORKSPACE
+        run: terraform workspace select staging || terraform workspace new staging
 
-      # 6. Terraform Plan
       - name: Terraform Plan
-        run: terraform plan -var-file=$TF_VAR_FILE
+        run: terraform plan -var-file=dev.tfvars
 
-      # 7. Terraform Apply (auto-approve)
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'  # only apply on main branch
-        run: terraform apply -var-file=$TF_VAR_FILE -auto-approve
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -var-file=dev.tfvars -auto-approve
