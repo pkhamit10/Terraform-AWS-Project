@@ -1,49 +1,28 @@
-name: Terraform Staging Deploy
+name: Terraform Dev Deployment
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
-
-env:
-  TF_WORKSPACE: "staging"   # Terraform Cloud workspace
-  TF_VAR_FILE: "dev.tfvars" # Environment-specific variables file
+    branches: ["main"]
 
 jobs:
   terraform:
-    name: Terraform Apply
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      id-token: write
-
     steps:
-      # 1. Checkout code
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v3
 
-      # 2. Install Terraform CLI
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: "1.12.2"  
-
-      - name: Setup Terraform Cloud credentials
-        run: |
-          mkdir -p ~/.terraform.d
-          echo '{"credentials":{"app.terraform.io":{"token":"'"${{ secrets.TFC_TOKEN }}"'"}}}' > ~/.terraform.d/credentials.tfrc.json
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform Init
-        run: terraform init
-
-      - name: Select Workspace
-        run: terraform workspace select staging || terraform workspace new staging
+        run: terraform init -reconfigure
 
       - name: Terraform Plan
-        run: terraform plan -var-file=dev.tfvars
+        run: terraform plan -var-file="dev.tfvars"
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
-        run: terraform apply -var-file=dev.tfvars -auto-approve
+        run: terraform apply -auto-approve -var-file="dev.tfvars"
