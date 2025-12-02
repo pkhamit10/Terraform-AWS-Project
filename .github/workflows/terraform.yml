@@ -33,10 +33,10 @@ jobs:
 
       - name: Set Terraform workspace
         run: |
+          # Use workflow_dispatch input or auto-derive from branch
           if [ -n "${{ github.event.inputs.env }}" ]; then
             echo "TF_WORKSPACE=${{ github.event.inputs.env }}" >> $GITHUB_ENV
           else
-            # Auto-derive from branch name
             BRANCH_NAME="${GITHUB_REF##*/}"
             case "$BRANCH_NAME" in
               feature/dev*) echo "TF_WORKSPACE=dev" >> $GITHUB_ENV ;;
@@ -49,15 +49,13 @@ jobs:
       - name: Terraform Init
         run: terraform init -reconfigure
 
-      - name: Select or Create Workspace
-        run: terraform workspace select tf-$TF_WORKSPACE 
-
       - name: Terraform Plan
-        run: terraform plan   # .auto.tfvars is loaded automatically
+        run: terraform plan
 
       - name: Terraform Apply
         if: startsWith(github.ref, 'refs/heads/feature/') || github.event_name == 'workflow_dispatch'
         run: terraform apply -auto-approve
+
 
 
 
