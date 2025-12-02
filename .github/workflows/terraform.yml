@@ -2,9 +2,9 @@ name: Terraform Multi-Env Deployment
 
 on:
   push:
-    branches-ignore:  # ignore main for automatic run
+    branches-ignore:
       - main
-  workflow_dispatch:   # allows manual selection of environment
+  workflow_dispatch:
     inputs:
       env:
         description: 'Environment to deploy'
@@ -42,7 +42,7 @@ jobs:
               feature/dev*) echo "TF_WORKSPACE=dev" >> $GITHUB_ENV ;;
               feature/stage*) echo "TF_WORKSPACE=staging" >> $GITHUB_ENV ;;
               feature/prod*) echo "TF_WORKSPACE=prod" >> $GITHUB_ENV ;;
-              *) echo "TF_WORKSPACE=dev" >> $GITHUB_ENV ;;  # default
+              *) echo "TF_WORKSPACE=dev" >> $GITHUB_ENV ;;
             esac
           fi
 
@@ -50,11 +50,46 @@ jobs:
         run: terraform init -reconfigure
 
       - name: Select or Create Workspace
-        run: terraform workspace select $TF_WORKSPACE -or-create
+        run: terraform workspace select tf-$TF_WORKSPACE -or-create
 
       - name: Terraform Plan
         run: terraform plan   # .auto.tfvars is loaded automatically
 
       - name: Terraform Apply
-        if: startsWith(github.ref, 'refs/heads/feature/')
+        if: startsWith(github.ref, 'refs/heads/feature/') || github.event_name == 'workflow_dispatch'
         run: terraform apply -auto-approve
+
+
+
+
+
+# I want my pipeline to make selectable for multiple environments and the trigger should be using my feature branch
+# The following code is the current code
+# name: Terraform Dev Deployment
+
+# on:
+#   push:
+#     branches: ["main"]
+
+# jobs:
+#   terraform:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+
+#       - name: Set up Terraform
+#         uses: hashicorp/setup-terraform@v2
+#         with:
+#           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+#       - name: Terraform Init
+#         run: terraform init -reconfigure
+
+#       - name: Terraform Plan
+#         run: terraform plan 
+
+#       - name: Terraform Apply
+#         if: github.ref == 'refs/heads/main'
+#         run: terraform apply -auto-approve 
