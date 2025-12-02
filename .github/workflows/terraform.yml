@@ -1,15 +1,33 @@
-name: Terraform Dev Deployment
+name: Terraform Multi-Env Deployment
 
 on:
   push:
-    branches: ["main"]
+    branches-ignore:
+      - main
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    env:
+      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1
+
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Terraform
@@ -17,12 +35,63 @@ jobs:
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
+      - name: Set Terraform workspace
+        run: |
+          # Use workflow_dispatch input or auto-derive from branch
+          if [ -n "${{ github.event.inputs.env }}" ]; then
+            echo "TF_WORKSPACE=${{ github.event.inputs.env }}" >> $GITHUB_ENV
+          else
+            BRANCH_NAME="${GITHUB_REF##*/}"
+            case "$BRANCH_NAME" in
+              feature/dev*) echo "TF_WORKSPACE=dev" >> $GITHUB_ENV ;;
+              feature/stage*) echo "TF_WORKSPACE=staging" >> $GITHUB_ENV ;;
+              feature/prod*) echo "TF_WORKSPACE=prod" >> $GITHUB_ENV ;;
+              *) echo "TF_WORKSPACE=dev" >> $GITHUB_ENV ;;
+            esac
+          fi
+
       - name: Terraform Init
         run: terraform init -reconfigure
 
       - name: Terraform Plan
-        run: terraform plan 
+        run: terraform plan
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
-        run: terraform destroy -auto-approve 
+        if: startsWith(github.ref, 'refs/heads/feature/') || github.event_name == 'workflow_dispatch'
+        run: terraform apply -auto-approve
+
+
+
+
+
+
+# I want my pipeline to make selectable for multiple environments and the trigger should be using my feature branch
+# The following code is the current code
+# name: Terraform Dev Deployment
+
+# on:
+#   push:
+#     branches: ["main"]
+
+# jobs:
+#   terraform:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+
+#       - name: Set up Terraform
+#         uses: hashicorp/setup-terraform@v2
+#         with:
+#           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+#       - name: Terraform Init
+#         run: terraform init -reconfigure
+
+#       - name: Terraform Plan
+#         run: terraform plan 
+
+#       - name: Terraform Apply
+#         if: github.ref == 'refs/heads/main'
+#         run: terraform apply -auto-approve 
