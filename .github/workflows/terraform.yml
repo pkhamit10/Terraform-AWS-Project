@@ -15,6 +15,14 @@ on:
           - dev
           - staging
           - prod
+      action:
+        description: 'Terraform action'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
           
 
 jobs:
@@ -55,11 +63,20 @@ jobs:
         run: terraform init -reconfigure
 
       - name: Terraform Plan
-        run: terraform plan
+        run: |
+          if [ "${{ github.event.inputs.action }}" == "destroy" ]; then
+            terraform plan -destroy
+          else
+            terraform plan
+          fi
 
-      - name: Terraform Apply
-        if: startsWith(github.ref, 'refs/heads/feature/') || github.event_name == 'workflow_dispatch'
-        run: terraform apply -auto-approve
+      - name: Terraform Apply / Destroy
+        run: |
+          if [ "${{ github.event.inputs.action }}" == "destroy" ]; then
+            terraform destroy -auto-approve
+          else
+            terraform apply -auto-approve
+          fi
 
 
 
