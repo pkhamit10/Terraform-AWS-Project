@@ -2,7 +2,7 @@ name: Terraform Multi-Env Deployment
 
 on:
   push:
-    branches-ignore:  # ignore main for automatic run, we’ll trigger on feature branches
+    branches-ignore:  # ignore main for automatic run
       - main
   workflow_dispatch:   # allows manual selection of environment
     inputs:
@@ -31,22 +31,30 @@ jobs:
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-      - name: Set Environment
-        if: github.event_name == 'workflow_dispatch'
+      - name: Set Terraform workspace
         run: |
-          echo "Selected environment: ${{ github.event.inputs.env }}"
-          echo "TF_WORKSPACE=${{ github.event.inputs.env }}" >> $GITHUB_ENV
+          if [ -n "${{ github.event.inputs.env }}" ]; then
+            echo "TF_WORKSPACE=${{ github.event.inputs.env }}" >> $GITHUB_ENV
+          else
+            # Auto-derive from branch name
+            BRANCH_NAME="${GITHUB_REF##*/}"
+            case "$BRANCH_NAME" in
+              feature/dev*) echo "TF_WORKSPACE=dev" >> $GITHUB_ENV ;;
+              feature/stage*) echo "TF_WORKSPACE=staging" >> $GITHUB_ENV ;;
+              feature/prod*) echo "TF_WORKSPACE=prod" >> $GITHUB_ENV ;;
+              *) echo "TF_WORKSPACE=dev" >> $GITHUB_ENV ;;  # default
+            esac
+          fi
 
       - name: Terraform Init
         run: terraform init -reconfigure
 
       - name: Select or Create Workspace
-        run: |
-          terraform workspace select $TF_WORKSPACE || terraform workspace new $TF_WORKSPACE
+        run: terraform workspace select $TF_WORKSPACE -or-create
 
       - name: Terraform Plan
-        run: terraform plan -var-file="${TF_WORKSPACE}.auto.tfvars"
+        run: terraform plan   # .auto.tfvars is loaded automatically
 
       - name: Terraform Apply
         if: startsWith(github.ref, 'refs/heads/feature/')
-        run: terraform apply -auto-approve -var-file="${TF_WORKSPACE}.auto.tfvars"
+        run: terraform apply -auto-approve
