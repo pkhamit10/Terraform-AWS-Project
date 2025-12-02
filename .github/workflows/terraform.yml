@@ -57,9 +57,9 @@ jobs:
       - name: Terraform Plan
         run: terraform plan
 
-      # - name: Terraform Apply
-      #   if: startsWith(github.ref, 'refs/heads/feature/') || github.event_name == 'workflow_dispatch'
-      #   run: terraform destroy -auto-approve
+      - name: Terraform Apply
+        if: startsWith(github.ref, 'refs/heads/feature/') || github.event_name == 'workflow_dispatch'
+        run: terraform destroy -auto-approve
 
 
 
