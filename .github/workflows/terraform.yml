@@ -50,7 +50,7 @@ jobs:
         run: terraform init -reconfigure
 
       - name: Select or Create Workspace
-        run: terraform workspace select tf-$TF_WORKSPACE -or-create
+        run: terraform workspace select tf-$TF_WORKSPACE 
 
       - name: Terraform Plan
         run: terraform plan   # .auto.tfvars is loaded automatically
