@@ -3,7 +3,7 @@ name: Terraform Multi-Env Deployment
 on:
   push:
     branches-ignore:
-      - main
+      - 'feature/*'
   workflow_dispatch:
     inputs:
       env:
@@ -15,6 +15,7 @@ on:
           - dev
           - staging
           - prod
+          
 
 jobs:
   terraform:
@@ -58,7 +59,7 @@ jobs:
 
       - name: Terraform Apply
         if: startsWith(github.ref, 'refs/heads/feature/') || github.event_name == 'workflow_dispatch'
-        run: terraform apply -auto-approve
+        run: terraform destroy -auto-approve
 
 
 

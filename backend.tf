@@ -5,7 +5,7 @@ terraform {
     organization = "pkham"
 
     workspaces {
-      prefix = "tf-"  # Terraform Cloud workspaces: tf-dev, tf-staging, tf-prod
+      prefix = "tf-"  
     }
   }
 }
