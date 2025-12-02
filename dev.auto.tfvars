@@ -2,7 +2,7 @@
 # VPC CONFIG (DEV)
 # -----------------------
 vpc_cidr = "10.10.0.0/16"
-vpc_name = "dev-pk-vpc"
+vpc_name = "dev-vpc"
 
 # -----------------------
 # SUBNETS (DEV)
@@ -28,7 +28,7 @@ instances = {
     ami           = "ami-0c02fb55956c7d316" # example dev AMI
     instance_type = "t3.micro"
     subnet_key    = "subnet-a"
-    key_name      = "dev-key"
+    key_name      = "pkawsprod"
     user_data     = <<-EOF
                       #!/bin/bash
                       yum update -y
@@ -44,7 +44,7 @@ instances = {
     ami           = "ami-0c02fb55956c7d316"
     instance_type = "t3.micro"
     subnet_key    = "subnet-b"
-    key_name      = "dev-key"
+    key_name      = "pkawsprod"
     user_data     = ""
     sg_key        = "db_sg"
   }
